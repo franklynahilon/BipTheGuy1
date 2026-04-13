@@ -13,11 +13,12 @@ struct ContentView: View {
     @State private var audioPlayer : AVAudioPlayer!
     @State private var isFullSize = true
     @State private var selectedPhoto: PhotosPickerItem?
+    @State private var bipImage = Image("clown")
     var body: some View {
         VStack {
             Spacer()
             
-          Image("clown")
+            bipImage
                 .resizable()
                 .scaledToFit( )
                 .scaleEffect(isFullSize ? 1.0 : 0.9)
@@ -32,11 +33,20 @@ struct ContentView: View {
             
             Spacer()
             
-            PhotosPicker(selection: $selectedPhoto) {
+            PhotosPicker(selection: $selectedPhoto, matching: .images, preferredItemEncoding: .automatic) {
                 Label("Photo Library", systemImage: "photo.fill.on.rectangle.fill")
 
             }
-           
+            .onChange(of: selectedPhoto) {
+                
+                Task  {
+                    guard let selectedPhoto = try? await selectedPhoto?.loadTransferable(type: Image.self)else {
+                        print("😡 Could not get image from loadTransferrable.")
+                        return
+                    }
+                    bipImage = selectedPhoto
+                }
+            }
 
         }
         .padding()
